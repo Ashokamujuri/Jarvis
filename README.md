@@ -1,15 +1,24 @@
 <div align="center">
 
-# 🤖 Jarvis — Personal AI Assistant
+![Jarvis Banner](assets/banner.jpg)
 
-**A modular, voice-activated AI assistant for Windows — powered by Gemini & Groq LLMs**
+<br/>
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
-![LLM](https://img.shields.io/badge/LLM-Gemini%20%7C%20Groq-orange?style=for-the-badge&logo=google&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Windows](https://img.shields.io/badge/Platform-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-LLM-F55036?style=for-the-badge&logo=groq&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)
+![Stars](https://img.shields.io/github/stars/Ashokamujuri/Jarvis?style=for-the-badge&color=yellow)
 
-*Speak to your PC. Jarvis listens, thinks, and acts.*
+<br/>
+
+> **A modular, voice-activated personal AI assistant for Windows**  
+> *Speak to your PC. Jarvis listens, thinks, and acts.*
+
+<br/>
+
+[🚀 Quick Start](#-quick-start) · [✨ Features](#-features) · [🏛️ Architecture](#%EF%B8%8F-architecture) · [🛠️ Add a Tool](#%EF%B8%8F-adding-a-custom-tool) · [⚙️ Configuration](#%EF%B8%8F-configuration-reference)
 
 </div>
 
@@ -17,230 +26,217 @@
 
 ## 🌟 Overview
 
-Jarvis is a fully local, extensible personal AI assistant that runs on Windows. It combines voice recognition, offline text-to-speech, local SQLite memory persistence, dual LLM support (Google Gemini & Groq), wake-word activation ("Hey Jarvis"), a centralized risk & permission system, and a polished desktop GUI — all in a single Python package.
+**Jarvis** is a fully local, extensible personal AI assistant that runs on Windows. It combines:
 
----
+- 🎤 **Wake-word voice recognition** — say *"Hey Jarvis"* and go
+- 🧠 **Dual LLM brain** — Google Gemini *or* Groq, switchable via `.env`
+- 🖼️ **Desktop GUI** — polished Tkinter interface with real-time status
+- 🛡️ **Permission system** — tiered risk levels protect sensitive operations
+- 💾 **SQLite memory** — Jarvis remembers facts between sessions
+- 🎵 **Music & browser control** — YouTube, Spotify, Google via Chrome CDP
 
-## 🏛️ Architecture
-
-Jarvis is built around a decoupled, layered pipeline where each subsystem operates independently:
-
-```
-                         ┌──────────────────────────┐
-                         │  main.py (--gui / --cli) │
-                         └─────────────┬────────────┘
-                                       │
-                        ┌──────────────▼──────────────┐
-                        │   jarvis.app  (Event Bus)   │
-                        └──────┬───────────────┬──────┘
-            ┌──────────────────┴───┐       ┌───┴──────────────────┐
-            │                      │       │                      │
-  ┌─────────▼────────┐  ┌──────────▼────┐  │  ┌──────────────────────────────────────┐
-  │ Desktop GUI (Tk) │  │ Speech / Audio│  │  │ CommandProcessor  (3-Tier Routing)   │
-  │ - Status badge   │  │ - WakeWord    │  │  ├──────────────────────────────────────┤
-  │ - Mic indicator  │  │ - Listener    │  │  │ 1. System Commands (hello, quit…)    │
-  │ - Chat history   │  │ - TTS Speaker │  │  │ 2. ToolRegistry + SafeExecutor       │
-  │ - Listen toggle  │  └───────────────┘  │  │ 3. LLM Brain (Gemini / Groq)         │
-  │ - Text input     │                     │  └───────────────────┬──────────────────┘
-  └──────────────────┘                     │                      │
-                                           │         ┌────────────▼────────────┐
-                                           │         │   PermissionManager     │
-                                           │         │  (SAFE/MODERATE/DANGER) │
-                                           │         └────────────┬────────────┘
-                                           │                      │
-                                           │         ┌────────────▼────────────┐
-                                           │         │     Built-in Tools      │
-                                           │         │  - get_time             │
-                                           │         │  - system_info          │
-                                           │         │  - open_application     │
-                                           │         │  - close_application    │
-                                           │         │  - web search & browser │
-                                           │         │  - play_music (Chrome)  │
-                                           │         │  - memory (SQLite)      │
-                                           │         │  - create_file          │
-                                           │         └─────────────────────────┘
-```
-
-### Module Responsibilities
-
-| Module | Location | Purpose |
-|---|---|---|
-| **App Orchestrator** | [`jarvis/app.py`](jarvis/app.py) | Coordinates all subsystems, manages speech/wake-word loops, exposes an event bus for UI decoupling. |
-| **GUI Layer** | [`jarvis/gui/`](jarvis/gui/) | Tkinter desktop UI with status indicators, audio state, conversation history, and listening controls. |
-| **Command Processor** | [`jarvis/commands/`](jarvis/commands/) | 3-tier routing: system commands → tool execution → LLM brain. |
-| **Tool Framework** | [`jarvis/tools/`](jarvis/tools/) | `BaseTool`, `ToolRegistry`, and `SafeExecutor` with centralized permission checks and error containment. |
-| **Permissions** | [`jarvis/permissions.py`](jarvis/permissions.py) | `RiskLevel` classifications (SAFE, MODERATE, DANGEROUS, BLOCKED) and voice confirmation callbacks. |
-| **Memory Store** | [`jarvis/memory/`](jarvis/memory/) | Local SQLite persistence for user facts with CRUD operations. |
-| **AI Brain** | [`jarvis/brain/`](jarvis/brain/) | Dual-provider LLM support: **Google Gemini** (`gemini_brain.py`) and **Groq** (`groq_brain.py`). |
-| **Personality** | [`jarvis/personality.py`](jarvis/personality.py) | System prompt configuring character tone, speech rules, and behavior guidelines. |
-| **Speech Input** | [`jarvis/speech/`](jarvis/speech/) | Microphone capture with ambient noise calibration and Google Speech Recognition. |
-| **Wake Word** | [`jarvis/wakeword/`](jarvis/wakeword/) | Low-overhead phrase detection ("Hey Jarvis") with inline command extraction. |
-| **Voice Output** | [`jarvis/tts/`](jarvis/tts/) | Offline Windows SAPI5 voice synthesis via `pyttsx3`. |
-| **Utilities** | [`jarvis/utils/`](jarvis/utils/) | Word-boundary phrase matching, argument parsing, and ASCII console sanitization. |
+All in a clean, modular Python package — built to be extended.
 
 ---
 
 ## ✨ Features
 
-### 🎤 Voice & Wake-Word Activation
-- Say **"Hey Jarvis"** to activate — supports inline commands (e.g., *"Hey Jarvis what time is it"* executes immediately).
-- Microphone ambient-noise calibration for reliable recognition.
-- Seamlessly falls back to text input when no mic is available.
+![Features Grid](assets/features.jpg)
 
-### 🧠 Dual LLM Brain (Gemini & Groq)
-- Switch between **Google Gemini** (default: `gemini-2.5-flash`) and **Groq** (default: `qwen3.8-27b`) via `.env`.
-- Multi-turn conversation context maintained across interactions.
-- Falls back gracefully to built-in tools when the LLM is unavailable.
+<br/>
 
-### 🖥️ Desktop Application Control
-- Launch installed Windows apps by name: Chrome, VS Code, Notepad, Calculator, Paint, File Explorer, Task Manager, and more.
-- Close running applications by voice or text command.
-- Secure allowlist prevents arbitrary shell execution.
-
-### 🌐 Web Search & Browser
-- Open verified websites directly (YouTube, GitHub, Google Drive, Reddit, ChatGPT, etc.).
-- Execute Google web searches from voice commands.
-- Chrome CDP integration for advanced browser control.
-
-### 🎵 Music Playback
-- Play music on YouTube or Spotify via Chrome with smart tab reuse.
-- Control playback without opening unnecessary new browser windows.
-
-### 💾 Persistent Local Memory (SQLite)
-- Store facts: *"Remember that my project is called Jarvis."*
-- Recall facts: *"What do you know about Python?"*
-- Search, delete individual entries, or clear all memories.
-- Dynamic permission scaling — clearing all memories requires confirmation.
-
-### 🛡️ Centralized Permission System
-
-| Risk Level | Behavior | Example |
-|---|---|---|
-| `SAFE` | Runs immediately, no confirmation | Get time, system info |
-| `MODERATE` | Requests voice confirmation | Open apps, clear memories |
-| `DANGEROUS` | Requires explicit confirmation, auto-denied in headless mode | Destructive file ops |
-| `BLOCKED` | Always denied | Blocked system operations |
-
-### 📂 File Creation
-- Create files by voice or text command with risk-aware confirmation.
-
-### 🖼️ Desktop GUI
-- Real-time status badges for all subsystems (Brain, Mic, Speech, Wake Word).
-- Scrollable, timestamped conversation history with a clear control.
-- Listening toggle button — start/stop Jarvis without restarting.
-- Full text input for command entry without speaking.
+| Feature | Description |
+|---|---|
+| 🎤 **Voice Activation** | Wake-word "Hey Jarvis" + inline command execution |
+| 🧠 **Dual LLM Brain** | Google Gemini 2.5 Flash or Groq — switchable in `.env` |
+| 🖥️ **Desktop GUI** | Tkinter UI with status badges, chat history, listen toggle |
+| 🖥️ **App Control** | Launch & close Windows apps by voice (Chrome, VS Code, etc.) |
+| 🌐 **Web Search** | Google search + direct site navigation via Chrome |
+| 🎵 **Music Playback** | YouTube/Spotify via Chrome CDP with smart tab reuse |
+| 💾 **SQLite Memory** | Store, recall, search, and delete personal facts locally |
+| 🛡️ **Permission System** | SAFE / MODERATE / DANGEROUS / BLOCKED risk tiers |
+| 📂 **File Creation** | Create files by voice with risk-aware confirmation |
+| 🔇 **Offline TTS** | Windows SAPI5 voice via `pyttsx3` — no internet needed |
 
 ---
 
-## ⚠️ Known Limitations
+## 🏛️ Architecture
 
-1. **Online Speech Recognition** — Uses Google's free web API via `SpeechRecognition`, requiring internet. Offline alternatives (Vosk, Porcupine) are supported via base classes.
-2. **API Rate Limits** — If the LLM provider is rate-limited, Jarvis continues operating with built-in tools and system commands.
-3. **Windows Platform** — App launch paths, Windows URI schemes (`ms-settings:`), and `pyttsx3` TTS are optimized for Windows.
+![Architecture Diagram](assets/architecture.jpg)
+
+<br/>
+
+### Module Responsibilities
+
+| Module | File | Purpose |
+|---|---|---|
+| **App Orchestrator** | [`jarvis/app.py`](jarvis/app.py) | Coordinates all subsystems, event bus for UI decoupling |
+| **GUI Layer** | [`jarvis/gui/`](jarvis/gui/) | Tkinter desktop UI with indicators & chat history |
+| **Command Processor** | [`jarvis/commands/`](jarvis/commands/) | 3-tier routing: system → tools → LLM brain |
+| **Tool Framework** | [`jarvis/tools/`](jarvis/tools/) | `BaseTool`, `ToolRegistry`, `SafeExecutor` |
+| **Permissions** | [`jarvis/permissions.py`](jarvis/permissions.py) | `RiskLevel` tiers & voice confirmation callbacks |
+| **Memory Store** | [`jarvis/memory/`](jarvis/memory/) | SQLite persistence — facts, conversations, tasks |
+| **AI Brain** | [`jarvis/brain/`](jarvis/brain/) | Gemini (`gemini_brain.py`) + Groq (`groq_brain.py`) |
+| **Personality** | [`jarvis/personality.py`](jarvis/personality.py) | System prompt — character tone & speech rules |
+| **Speech Input** | [`jarvis/speech/`](jarvis/speech/) | Microphone capture + Google Speech Recognition |
+| **Wake Word** | [`jarvis/wakeword/`](jarvis/wakeword/) | "Hey Jarvis" detection + inline command extraction |
+| **Voice Output** | [`jarvis/tts/`](jarvis/tts/) | Offline SAPI5 TTS via `pyttsx3` |
+| **Utilities** | [`jarvis/utils/`](jarvis/utils/) | Phrase matching, arg parsing, text sanitization |
+
+---
+
+## 📁 Project Structure
+
+<div align="center">
+
+![File Structure](assets/file_structure.jpg)
+
+</div>
+
+<br/>
+
+```
+Jarvis/
+├── main.py                    # Entry point  (--gui / --cli)
+├── requirements.txt           # Python dependencies
+├── .env.example               # Configuration template
+├── run_jarvis.bat             # Windows one-click launcher
+├── assets/                    # README images
+└── jarvis/
+    ├── app.py                 # Core orchestrator & event bus
+    ├── config.py              # Centralized config (.env loader)
+    ├── personality.py         # AI character & system prompt
+    ├── permissions.py         # RiskLevel & permission manager
+    ├── logger.py              # Logging setup
+    ├── brain/                 # LLM providers
+    │   ├── gemini_brain.py    #  → Google Gemini
+    │   └── groq_brain.py      #  → Groq
+    ├── commands/              # 3-tier command processor
+    ├── gui/                   # Tkinter desktop interface
+    ├── memory/                # SQLite store (facts, tasks, prefs)
+    ├── speech/                # Speech recognition
+    ├── tts/                   # pyttsx3 TTS
+    ├── wakeword/              # Wake-word detection
+    ├── tools/
+    │   ├── base.py            # BaseTool + ToolResult
+    │   ├── registry.py        # ToolRegistry
+    │   ├── executor.py        # SafeExecutor
+    │   └── builtins/
+    │       ├── get_time.py
+    │       ├── system_info.py
+    │       ├── open_app.py
+    │       ├── close_app.py
+    │       ├── web_search.py
+    │       ├── play_music.py
+    │       ├── memory.py
+    │       └── create_file.py
+    └── utils/                 # Shared utilities
+```
 
 ---
 
 ## 🚀 Quick Start
 
+![Quick Start](assets/quickstart.jpg)
+
+<br/>
+
 ### 1. Prerequisites
 
-- Python 3.10 or later
-- Windows 10/11
-- A microphone (optional — text input works without one)
-- A **Gemini** or **Groq** API key (optional — built-in tools work without LLM)
+- **Python** 3.10 or later
+- **Windows** 10 / 11
+- A **microphone** *(optional — text input works without one)*
+- A **Gemini** or **Groq** API key *(optional — built-in tools work without LLM)*
 
-### 2. Installation
+### 2. Clone & Install
 
 ```powershell
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/jarvis.git
-cd jarvis
-
-# Install dependencies
+git clone https://github.com/Ashokamujuri/Jarvis.git
+cd Jarvis
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
+### 3. Configure
 
 ```powershell
-# Copy the template
 copy .env.example .env
 ```
 
-Edit `.env` and fill in at least one API key:
+Edit `.env` and set your API key:
 
 ```env
-# Choose your LLM provider: "gemini" or "groq"
+# Choose provider: "gemini" or "groq"
 JARVIS_BRAIN_PROVIDER=gemini
 
-# Google Gemini (https://aistudio.google.com/apikey)
+# Google Gemini → https://aistudio.google.com/apikey
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# OR Groq (https://console.groq.com/keys)
+# OR Groq → https://console.groq.com/keys
 GROQ_API_KEY=your_groq_api_key_here
 ```
 
-### 4. Run Jarvis
+### 4. Launch
 
 ```powershell
-# Launch with Desktop GUI (default)
-python main.py
-
-# OR launch in CLI / terminal mode
-python main.py --cli
+python main.py          # Desktop GUI (default)
+python main.py --cli    # Terminal / CLI mode
 ```
 
-> **Windows users:** You can also double-click `run_jarvis.bat` to start the GUI instantly.
+> **Tip:** Double-click `run_jarvis.bat` to launch the GUI instantly on Windows.
+
+---
+
+## 🛡️ Permission System
+
+Jarvis uses a 4-tier risk system to keep operations safe:
+
+| Risk Level | Color | Behavior | Examples |
+|---|---|---|---|
+| `SAFE` | 🟢 Green | Runs immediately | Get time, system info |
+| `MODERATE` | 🟡 Yellow | Asks for voice confirmation | Open apps, clear memories |
+| `DANGEROUS` | 🔴 Red | Requires explicit "yes", auto-denied headless | Destructive operations |
+| `BLOCKED` | ⛔ Black | Always denied | Permanently blocked actions |
 
 ---
 
 ## 🛠️ Adding a Custom Tool
 
-All tools subclass [`BaseTool`](jarvis/tools/base.py) and declare their name, description, risk level, and trigger keywords.
+All tools subclass [`BaseTool`](jarvis/tools/base.py) — it's just 3 steps:
 
-### Step 1 — Create the Tool File
-
-Create `jarvis/tools/builtins/weather.py`:
+**Step 1 — Create** `jarvis/tools/builtins/weather.py`:
 
 ```python
 from jarvis.permissions import RiskLevel
 from jarvis.tools.base import BaseTool, ToolResult
 
 class WeatherTool(BaseTool):
-    name = "get_weather"
+    name        = "get_weather"
     description = "Checks the current weather forecast."
-    risk_level = RiskLevel.SAFE  # No confirmation needed
-    keywords = {"weather", "forecast", "temperature", "is it raining"}
+    risk_level  = RiskLevel.SAFE
+    keywords    = {"weather", "forecast", "temperature", "is it raining"}
 
     def action_summary(self, raw_text: str) -> str:
         return "check the local weather"
 
     def execute(self, raw_text: str) -> ToolResult:
-        # Your implementation here
         return ToolResult(
             success=True,
-            message="The weather is currently clear and 72°F.",
+            message="It's currently clear and 72°F.",
             data={"temp": 72, "condition": "clear"}
         )
 ```
 
-### Step 2 — Register the Tool
-
-In [`jarvis/tools/builtins/__init__.py`](jarvis/tools/builtins/__init__.py):
+**Step 2 — Register** in [`jarvis/tools/builtins/__init__.py`](jarvis/tools/builtins/__init__.py):
 
 ```python
 from jarvis.tools.builtins.weather import WeatherTool
 
-def register_all(registry: ToolRegistry) -> None:
-    # ... existing tools ...
+def register_all(registry):
     registry.register(WeatherTool())
+    # ... other tools
 ```
 
-Your tool is now automatically:
-- Routed by the `CommandProcessor`
-- Protected by `SafeExecutor` and `PermissionManager`
-- Listed in the `help` command output
-- Available in both GUI and CLI modes
+**Done!** Your tool is now automatically routed, permission-checked, listed in `help`, and available in both GUI and CLI modes.
 
 ---
 
@@ -257,57 +253,34 @@ All settings live in `.env` (copy from `.env.example`):
 | `JARVIS_GROQ_MODEL` | `qwen/qwen3.8-27b` | Groq model name |
 | `JARVIS_WAKE_WORD` | `hey jarvis` | Custom wake-word phrase |
 | `JARVIS_WAKE_WORD_ENABLED` | `true` | Enable/disable wake-word |
-| `JARVIS_SPEECH_LANGUAGE` | `en-US` | Speech recognition language |
-| `JARVIS_TTS_RATE` | `175` | TTS speaking rate (words/min) |
+| `JARVIS_SPEECH_LANGUAGE` | `en-US` | Speech recognition locale |
+| `JARVIS_SPEECH_TIMEOUT` | `5` | Seconds to wait for speech |
+| `JARVIS_TTS_RATE` | `175` | TTS speaking speed (words/min) |
+| `JARVIS_TTS_VOLUME` | `1.0` | TTS volume (0.0 – 1.0) |
 | `JARVIS_LOG_LEVEL` | `INFO` | Logging verbosity |
 
 ---
 
-## 📁 Project Structure
+## ⚠️ Known Limitations
 
-```
-jarvis/
-├── main.py                  # Entry point (--gui / --cli)
-├── requirements.txt         # Python dependencies
-├── .env.example             # Configuration template
-├── run_jarvis.bat           # Windows quick-launch script
-└── jarvis/
-    ├── app.py               # Core orchestrator & event bus
-    ├── config.py            # Centralized config loading
-    ├── personality.py       # AI character & system prompt
-    ├── permissions.py       # RiskLevel & permission manager
-    ├── logger.py            # Logging setup
-    ├── brain/               # LLM providers (Gemini, Groq)
-    ├── commands/            # 3-tier command processor
-    ├── gui/                 # Tkinter desktop interface
-    ├── memory/              # SQLite memory store
-    ├── speech/              # Speech recognition
-    ├── tts/                 # Text-to-speech
-    ├── wakeword/            # Wake-word detection
-    ├── tools/               # Tool framework
-    │   ├── base.py          # BaseTool, ToolResult
-    │   ├── registry.py      # ToolRegistry
-    │   ├── executor.py      # SafeExecutor
-    │   └── builtins/        # Built-in tools
-    │       ├── get_time.py
-    │       ├── system_info.py
-    │       ├── open_app.py
-    │       ├── close_app.py
-    │       ├── web_search.py
-    │       ├── play_music.py
-    │       ├── memory.py
-    │       └── create_file.py
-    └── utils/               # Shared utilities
-```
+1. **Online Speech Recognition** — Uses Google's free web API, so an active internet connection is required. Offline alternatives (Vosk, Porcupine) are supported via base classes.
+2. **API Rate Limits** — If the LLM provider is rate-limited, Jarvis continues with built-in tools and system commands.
+3. **Windows Platform** — App launch paths, URI schemes (`ms-settings:`), and `pyttsx3` TTS are Windows-optimized.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
-  Made with ❤️ by <strong>Ashok</strong> — <em>Built to be extended. Built to be spoken to.</em>
+
+**Made with ❤️ by [Ashok](https://github.com/Ashokamujuri)**
+
+*Built to be extended. Built to be spoken to.*
+
+⭐ **Star the repo if you find it useful!** ⭐
+
 </div>
