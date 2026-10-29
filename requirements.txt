@@ -1,0 +1,17 @@
+# Jarvis - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Environment variable loading from .env files
+python-dotenv>=1.0.0
+
+# Speech recognition
+SpeechRecognition>=3.10.0
+
+# Microphone access (required by SpeechRecognition)
+PyAudio>=0.2.14
+
+# Text-to-speech (offline, uses Windows SAPI5)
+pyttsx3>=2.90
+
+# LLM brain (Groq API for fast inference)
+groq>=0.9.0

@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables (may contain secrets)
+.env
+
+# Logs
+logs/
+
+# Local data (SQLite memory database)
+data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Large media files (recordings, demos)
+*.mp4
+*.avi
+*.mov
+
+# Test result output files
+test_results*.txt
+
+# Scratch / temporary directories
+scratch/
+
+# Pytest cache
+.pytest_cache/
